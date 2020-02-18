@@ -1,6 +1,6 @@
 #!/bin/bash
 
-#Comprobacion de argumentos. Debe >= a 2.
+#Comprobación de argumentos. Debe ser >= a 2.
 
 if [ $# -lt 2 ]
 then
@@ -8,7 +8,7 @@ then
 	exit 1
 fi
 
-#Comprobacion de que primer argumento es un directorio
+#Comprobación de que primer argumento es un directorio
 
 if [ -d $1 ]
 then
@@ -29,51 +29,66 @@ NOCOPIADOS=0
 
 PRIMERAITERACION=1
 
-for i in $ORIGEN
+for o in $ORIGEN
 do
 	if [ $PRIMERAITERACION -eq 1 ]
 	then 
 		PRIMERAITERACION=0
 		echo ""
-		echo "-- Directorio a copiar los archivos: $i"
+		echo "-- Directorio a copiar los archivos: $o"
 		echo ""
 	else
-		if ! [ -d $i ]
+		if ! [ -d $o ]
 		then
-			echo "ALERTA: $i no es un directorio, no se iterara sobre el"
+			echo "ALERTA: $o no es un directorio, no se iterara sobre el"
 			echo ""
 			NOCOPIADOS=$(expr $NOCOPIADOS + 1)
 		else
 			echo "-------------------------------------"
-			echo "Buscando archivos en: $i"
+			echo "Buscando archivos en: $o"
 			echo "-------------------------------------"
-			for ARCHIVE in $(ls -p $i | grep -v /)
+			for ArchivoOrigen in $(ls -p $o | grep -v /)
 			do
 				ACTUALIZAR=0
-				EXISTE=$(find $DESTINO -type f -name $ARCHIVE)
+				ArchivoDestino=$(find $DESTINO -type f -name $ArchivoOrigen)
 				RESULTADO=0
-				if ! [ -z $EXISTE ]
+				if ! [ -z $ArchivoDestino ]
 				then
-					#Cogemos las fechas y le ponemos un formato para poder ver cual es menor ( mas nueva )
-					FECHAORIGEN=$(date +%F -r $i/$ARCHIVE | sed "s/-//g")
-					FECHADESTINO=$(date +%F -r $EXISTE | sed "s/-//g")
+					#Cogemos las fechas y le ponemos un formato para poder ver cuál es menor ( más nueva )
+					FECHAORIGEN=$(date +%F -r $o/$ArchivoOrigen | sed "s/-//g")
+					FECHADESTINO=$(date +%F -r $ArchivoDestino | sed "s/-//g")
 					RESULTADO=$(expr $FECHAORIGEN - $FECHADESTINO)
 					if [ $RESULTADO -gt 0 ]
 					then
 						#La de origen es más nueva
-						echo "Actualizando $ARCHIVE en $i"
+						echo "Actualizando $ArchivoOrigen en $DESTINO"
 						ACTUALIZAR=0
 					else
 						#La de destino es más nueva o son iguales
-						echo "$ARCHIVE ya se encuentra actualizado en $i"
-						NOCOPIADOS=$(expr $NOCOPIADOS + 1)
-						ACTUALIZAR=1
+						#Comparamos la hora de modificación
+						
+						MODORIGEN=$(date -r $o/$ArchivoOrigen | cut -d " " -f 4 | sed "s/://g")
+						MODDESTINO=$(date -r $ArchivoDestino | cut -d " " -f 4 | sed "s/://g")
+						MODRESULTADO=$(expr $MODORIGEN - $MODDESTINO)
+						
+						if [ $MODRESULTADO -gt 0 ]
+						then
+							#Origen es más nuevo
+							echo "Actualizando $ArchivoOrigen en $DESTINO"
+							ACTUALIZAR=0
+						else
+							#Destino es más nueva o son iguales
+							echo "$ArchivoOrigen ya se encuentra actualizado en $DESTINO"
+							NOCOPIADOS=$(expr $NOCOPIADOS + 1)
+							ACTUALIZAR=1
+						fi
 					fi
-				fi
+					
+				fi					
 				if [ $ACTUALIZAR -eq 0 ]	
 				then
-					echo "Copiando archivo: $ARCHIVE"
-					cp -u --preserve=all $i/$ARCHIVE $DESTINO
+					echo "Copiando archivo: $ArchivoOrigen"
+					cp -u --preserve=all $o/$ArchivoOrigen $DESTINO
 					COPIADOS=$(expr $COPIADOS + 1)
 				fi
 			
