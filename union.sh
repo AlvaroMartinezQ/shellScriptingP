@@ -26,6 +26,7 @@ ORIGEN=$@
 
 COPIADOS=0
 NOCOPIADOS=0
+PARAMETROSNOITERADOS=0
 
 PRIMERAITERACION=1
 
@@ -42,7 +43,7 @@ do
 		then
 			echo "ALERTA: $o no es un directorio, no se iterara sobre el"
 			echo ""
-			NOCOPIADOS=$(expr $NOCOPIADOS + 1)
+			PARAMETROSNOITERADOS=$(expr $PARAMETROSNOITERADOS + 1)
 		else
 			echo "-------------------------------------"
 			echo "Buscando archivos en: $o"
@@ -64,8 +65,8 @@ do
 						echo "Actualizando $ArchivoOrigen en $DESTINO"
 						ACTUALIZAR=0
 					else
-						#La de destino es más nueva o son iguales
-						#Comparamos la hora de modificación
+						#La de destino es mas nueva o son iguales
+						#Comparamos la hora de modificacion
 						
 						MODORIGEN=$(date -r $o/$ArchivoOrigen | cut -d " " -f 4 | sed "s/://g")
 						MODDESTINO=$(date -r $ArchivoDestino | cut -d " " -f 4 | sed "s/://g")
@@ -73,11 +74,11 @@ do
 						
 						if [ $MODRESULTADO -gt 0 ]
 						then
-							#Origen es más nuevo
+							#Origen es mas nuevo
 							echo "Actualizando $ArchivoOrigen en $DESTINO"
 							ACTUALIZAR=0
 						else
-							#Destino es más nueva o son iguales
+							#Destino es mas nueva o son iguales
 							echo "$ArchivoOrigen ya se encuentra actualizado en $DESTINO"
 							NOCOPIADOS=$(expr $NOCOPIADOS + 1)
 							ACTUALIZAR=1
@@ -99,8 +100,13 @@ do
 done
 
 TOTAL=`expr $COPIADOS + $NOCOPIADOS`
-echo "Total de ficheros: $TOTAL, de los cuales copiados: $COPIADOS y no copiados: $NOCOPIADOS"
-
+echo "Total de ficheros iterados: $TOTAL, de los cuales copiados: $COPIADOS y no copiados: $NOCOPIADOS"
+echo "Parametros erroneos en la llamada del script: $PARAMETROSNOITERADOS"
+echo ""
+if ! test $PARAMETROSNOITERADOS -eq 0
+then
+	return 2
+fi
 exit 0
 
 
