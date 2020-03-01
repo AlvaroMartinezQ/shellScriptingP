@@ -105,7 +105,7 @@ echo "Parametros erroneos en la llamada del script: $PARAMETROSNOITERADOS"
 echo ""
 if ! test $PARAMETROSNOITERADOS -eq 0
 then
-	return 2
+	exit 2
 fi
 exit 0
 
